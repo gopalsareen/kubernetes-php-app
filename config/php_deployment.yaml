@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php
+  labels:
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: php
+        tier: backend
+    spec:
+      volumes:
+        - name: nfs-share
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+      containers:
+        - name: php
+          image: php:7.2-fpm
+          volumeMounts:
+            - name: nfs-share
+              mountPath: /var/www/
+      initContainers:
+        - name: install
+          image: busybox
+          volumeMounts:
+            - name: nfs-share
+              mountPath: /var/www
+          command: ['sh', '-c', 'echo "<?php echo phpinfo();" > /var/www/index.php']
+
